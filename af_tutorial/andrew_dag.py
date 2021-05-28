@@ -1,6 +1,7 @@
-import af_tutorial.util as util
-
 from airflow import DAG
+
+# pylint: disable=E0401,C0411
+import plutil as util
 
 
 dag = DAG(
@@ -10,18 +11,11 @@ dag = DAG(
     schedule_interval=None
 )
 
+cluster = util.RayGpuCluster(dag=dag, name="andrew-gpu-tmp", num_worker=2)
 
-vm = util.VM(
-    name="andrew-tmp",
-    instance_type="n1-standard-4",
-    zone="us-central1-a",
-    dag=dag
-)
-
-vm_start = vm.start()
-vm_await = vm.await_instance_up()
-vm_do_something = vm.execute_cmd(cmd="echo 'HELLOOOOOOOOOOOOOOOOOOOOOOOOO'", task_id="do_something")
-vm_delete = vm.delete()
+cstart = cluster.initialize(task_id="cluster-start")
+cdebug = cluster.exec_cmd("/opt/conda/bin/python -m plnet.main --action=debug", task_id="exec-debug")
+cdelete = cluster.delete(task_id="cluster-delete")
 
 # pylint: disable=W0104
-vm_start >> vm_await >> vm_do_something >> vm_delete
+cstart >> cdebug >> cdelete
