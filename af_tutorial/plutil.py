@@ -7,8 +7,12 @@ from airflow.models import Variable
 from airflow.operators.python_operator import PythonOperator
 
 # pylint: disable=C0411
+import vm_utils.main as vmain
 import vm_utils.vm as vutil
 import vm_utils.ray as cutil
+
+REGION = "us-east4"
+ZONE = REGION + "-b"
 
 yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
 
@@ -22,6 +26,16 @@ default_args = {
     'retry_delay': datetime.timedelta(minutes=3),
     'start_date': yesterday,
 }
+
+
+def await_start(task_id: str, dag: DAG, vm_name: str) -> PythonOperator:
+    task = PythonOperator(
+        task_id=task_id,
+        python_callable=vmain.await_instance_up,
+        op_kwargs={"vm_name": vm_name, "vm_zone": ZONE},
+        dag=dag
+    )
+    return task
 
 
 class ComputeBlock:
@@ -78,8 +92,8 @@ class RayCluster(ComputeBlock):
             # ray_pwd=Variable.get("RAY_REDIS_PWD"),
             ray_pwd=os.getenv("RAY_REDIS_PWD"),
             name=name,
-            region="us-east4",
-            zone="us-east4-b",
+            region=REGION,
+            zone=ZONE,
             initialize_env=False
         )
         super().__init__(manager=manager, dag=dag)
@@ -105,7 +119,7 @@ class ComputeVM(ComputeBlock):
     def __init__(self, dag: DAG, name: str):
         manager = vutil.VmManager(
             name=name,
-            zone="us-east4-b",
+            zone=ZONE,
             machine_type="n1-highmem-96",
             boot_disk_size=2000,
             initialize_env=False
