@@ -89,8 +89,7 @@ class RayCluster(ComputeBlock):
         manager = cutil.ClusterManager(
             num_gpu=num_gpu,
             num_worker=num_worker,
-            # ray_pwd=Variable.get("RAY_REDIS_PWD"),
-            ray_pwd=os.getenv("RAY_REDIS_PWD"),
+            ray_pwd=Variable.get("RAY_REDIS_PASSWORD"),
             name=name,
             region=REGION,
             zone=ZONE,
