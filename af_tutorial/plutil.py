@@ -93,7 +93,9 @@ class RayCluster(ComputeBlock):
             name=name,
             region=REGION,
             zone=ZONE,
-            initialize_env=False
+            cluster_init_script_url="gs://vm-setup/ray/init_actions.sh",
+            master_init_script_url="gs://vm-setup/ray/master_init.sh"
+
         )
         super().__init__(manager=manager, dag=dag)
 
@@ -121,6 +123,6 @@ class ComputeVM(ComputeBlock):
             zone=ZONE,
             machine_type="n1-highmem-96",
             boot_disk_size=2000,
-            initialize_env=False
+            startup_script_url="gs://vm-setup/vm/startup.sh"
         )
         super().__init__(manager=manager, dag=dag)
